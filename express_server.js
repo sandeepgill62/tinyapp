@@ -14,6 +14,18 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+app.get("/urls/:id", (req, res) => {
+  //const templateVars = { id: req.params.id };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  console.log(templateVars.id);
+  res.render("urls_show", templateVars);
+});
+
+app.get("/hello", (req, res) => {
+  const templateVars = { greeting: "Hello World!" };
+  res.render("hello_world", templateVars);
+});
+
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
@@ -22,9 +34,9 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.get("/set", (req, res) => {
   const a = 1;
