@@ -15,11 +15,12 @@ const urlDatabase = {
 
 // POST route to edit the long URL
 app.post("/urls/:id", (req, res) => {
+  //get id and newURL value into variable
   const id = req.params.id;
   const newURL = req.body.longURL;
   //update new long URL using id
   urlDatabase[id] = newURL;
-  // redirect to url_index page. -> remember /urls
+  // redirect to url_index page. -> remember use /urls
   res.redirect("/urls");
 });
 
@@ -28,10 +29,9 @@ app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   // delete url from database
   delete urlDatabase[id];
-  // redirect to url_index page. -> remember /urls
+  // redirect to url_index page using /urls. -> remember use /
   res.redirect("/urls");
 });
-
 
 // GET route to show form
 app.get("/urls", (req, res) => {
@@ -67,31 +67,41 @@ app.get("/u/:id", (req, res) => {
   res.redirect(longURL);
 });
 
-app.get("/hello", (req, res) => {
-  const templateVars = { greeting: "Hello World!" };
-  res.render("hello_world", templateVars);
+app.post("/login", (req, res) => {
+  // get username value
+  const username = req.body.username;
+  // set up cookie
+  res.cookie('username', username);
+
+  // redirect to url_index page using /urls. -> remember use /urls
+  res.redirect("/urls");
 });
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
+// app.get("/hello", (req, res) => {
+//   const templateVars = { greeting: "Hello World!" };
+//   res.render("hello_world", templateVars);
+// });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+// app.get("/", (req, res) => {
+//   res.send("Hello!");
+// });
+
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
 
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
 // });
 
-app.get("/set", (req, res) => {
-  const a = 1;
-  res.send(`a = ${a}`);
-});
+// app.get("/set", (req, res) => {
+//   const a = 1;
+//   res.send(`a = ${a}`);
+// });
 
-app.get("/fetch", (req, res) => {
-  res.send(`a = ${a}`);
-});
+// app.get("/fetch", (req, res) => {
+//   res.send(`a = ${a}`);
+// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
