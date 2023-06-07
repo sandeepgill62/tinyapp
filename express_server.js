@@ -2,10 +2,10 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-//set up for ejs template
+// set up for ejs template
 app.set("view engine", "ejs");
 
-//to translate and parse the data
+// to translate and parse the data
 app.use(express.urlencoded({ extended: true }));
 
 const urlDatabase = {
@@ -15,10 +15,10 @@ const urlDatabase = {
 
 // POST route to delete the URL
 app.post("/urls/:id/delete", (req, res) => {
-  console.log("hello + " + req.params.id);
   const id = req.params.id;
-
+  // delete url from database
   delete urlDatabase[id];
+  // redirect to url_index page. -> remember /urls
   res.redirect("/urls");
 });
 
