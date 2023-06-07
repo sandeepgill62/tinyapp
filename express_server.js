@@ -13,6 +13,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// POST route to edit the long URL
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const newURL = req.body.longURL;
+  //update new long URL using id
+  urlDatabase[id] = newURL;
+  // redirect to url_index page. -> remember /urls
+  res.redirect("/urls");
+});
+
 // POST route to delete the URL
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
@@ -50,7 +60,7 @@ app.get("/urls/:id", (req, res) => {
   res.render("urls_show", templateVars);
 });
 
-// shorter version to redirect to actual long URL
+// GET route for shorter version to redirect to actual long URL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   // redirect to actual website url
