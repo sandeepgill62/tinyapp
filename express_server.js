@@ -43,7 +43,7 @@ app.get("/urls/:id", (req, res) => {
 // shorter version to redirect to actual long URL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
-  // redirect to actual website
+  // redirect to actual website url
   res.redirect(longURL);
 });
 
