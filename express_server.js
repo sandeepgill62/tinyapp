@@ -13,6 +13,16 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// POST route to delete the URL
+app.post("/urls/:id/delete", (req, res) => {
+  console.log("hello + " + req.params.id);
+  const id = req.params.id;
+
+  delete urlDatabase[id];
+  res.redirect("/urls");
+});
+
+
 // GET route to show form
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
