@@ -41,11 +41,10 @@ app.post("/urls/:id/delete", (req, res) => {
 // GET route to show form
 app.get("/urls", (req, res) => {
   const templateVars = {
-    urls: urlDatabase,
-    username: req.cookies["username"]
+    urls: urlDatabase
   };
 
-  console.log(templateVars);
+  templateVars.username = req.cookies["username"];
 
   res.render("urls_index", templateVars);
 });
@@ -83,7 +82,13 @@ app.post("/login", (req, res) => {
   const username = req.body.username;
   // set up cookie
   res.cookie('username', username);
+  // redirect to url_index page using /urls. -> remember use /urls
+  res.redirect("/urls");
+});
 
+app.post("/logout", (req, res) => {
+  // clear the cookie
+  res.clearCookie('username');
   // redirect to url_index page using /urls. -> remember use /urls
   res.redirect("/urls");
 });
