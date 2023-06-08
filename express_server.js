@@ -1,4 +1,5 @@
 const express = require("express");
+var cookieParser = require('cookie-parser')
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -8,6 +9,10 @@ app.set("view engine", "ejs");
 // to translate and parse the data
 app.use(express.urlencoded({ extended: true }));
 
+// to use cookieParser
+app.use(cookieParser());
+
+// database to store URLs key-value
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
@@ -35,7 +40,13 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // GET route to show form
 app.get("/urls", (req, res) => {
-  const templateVars = { urls: urlDatabase };
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+
+  console.log(templateVars);
+
   res.render("urls_index", templateVars);
 });
 
@@ -68,7 +79,7 @@ app.get("/u/:id", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // get username value
+  // get username value in req.body
   const username = req.body.username;
   // set up cookie
   res.cookie('username', username);
