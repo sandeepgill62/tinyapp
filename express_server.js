@@ -18,6 +18,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+
 // POST route to edit the long URL
 app.post("/urls/:id", (req, res) => {
   //get id and newURL value into variable
@@ -91,6 +92,15 @@ app.post("/logout", (req, res) => {
   res.clearCookie('username');
   // redirect to url_index page using /urls. -> remember use /urls
   res.redirect("/urls");
+});
+
+app.get("/register", (req, res) => {
+  // render register
+  res.render("register");
+});
+
+app.post("/register", (req, res) => {
+
 });
 
 // app.get("/hello", (req, res) => {
