@@ -18,6 +18,9 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+const users = {
+
+};
 
 // POST route to edit the long URL
 app.post("/urls/:id", (req, res) => {
@@ -26,6 +29,7 @@ app.post("/urls/:id", (req, res) => {
   const newURL = req.body.longURL;
   //update new long URL using id
   urlDatabase[id] = newURL;
+
   // redirect to url_index page. -> remember use /urls
   res.redirect("/urls");
 });
@@ -42,10 +46,12 @@ app.post("/urls/:id/delete", (req, res) => {
 // GET route to show form
 app.get("/urls", (req, res) => {
   const templateVars = {
-    urls: urlDatabase
+    urls: urlDatabase,
+    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
   };
 
-  templateVars.username = req.cookies["username"];
+  console.log(templateVars);
 
   res.render("urls_index", templateVars);
 });
@@ -61,13 +67,23 @@ app.post("/urls", (req, res) => {
   res.redirect(`urls/${shortURL}`);
 });
 
+// GET route for new URL
 app.get("/urls/new", (req, res) => {
-  res.render("urls_new");
+  const templateVars = {
+    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
+  };
+  res.render("urls_new", templateVars);
 });
 
 // Route Parameters
 app.get("/urls/:id", (req, res) => {
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
+  const templateVars = {
+    id: req.params.id,
+    longURL: urlDatabase[req.params.id],
+    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -90,17 +106,38 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req, res) => {
   // clear the cookie
   res.clearCookie('username');
+  res.clearCookie('user_id');
   // redirect to url_index page using /urls. -> remember use /urls
   res.redirect("/urls");
 });
 
 app.get("/register", (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
+  };
+
+  console.log("==> " + templateVars.user);
   // render register
-  res.render("register");
+  res.render("register", templateVars);
 });
 
 app.post("/register", (req, res) => {
 
+  // create user_id
+  const user_id = generateRandomString(6);
+  //get email and password value
+  const email = req.body.email;
+  const password = req.body.password;
+  //update new long URL using id
+  users[user_id] = { user_id, email, password };
+
+  res.cookie('user_id', user_id);
+
+  console.log(users);
+
+  res.redirect("/urls");
 });
 
 // app.get("/hello", (req, res) => {

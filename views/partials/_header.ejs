@@ -11,10 +11,10 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <%if (typeof(username) !=="undefined" && username !==null) { %>
+    <%if (user && typeof(user["email"]) !=="undefined" && user["email"] !==null ) { %>
       <form class="form-inline" action="/logout" method="POST">
         <div class="form-group mb-2">
-          <label name="username" value="<%= username %>"> Logged in as: <%= username %> !
+          <label name="username" value="<%= user[" email"] %>"> Logged in as: <%= user["email"] %> !
           </label>
           <button type="submit" class="btn btn-outline-dark">Logout</button>
         </div>
@@ -27,6 +27,6 @@
             <button type="submit" class="btn btn-outline-dark">Login</button>
           </div>
         </form>
-        <%}%>
+        <% } %>
   </nav>
 </header>
