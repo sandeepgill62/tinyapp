@@ -54,7 +54,6 @@ app.get("/urls", (req, res) => {
   };
 
   //console.log(templateVars);
-
   res.render("urls_index", templateVars);
 });
 
@@ -94,6 +93,17 @@ app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   // redirect to actual website url
   res.redirect(longURL);
+});
+
+app.get("/login", (req, res) => {
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"],
+    user: users[req.cookies["user_id"]]
+  };
+
+  // render login
+  res.render("login", templateVars);
 });
 
 app.post("/login", (req, res) => {
