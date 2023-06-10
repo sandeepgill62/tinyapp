@@ -18,9 +18,11 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-const users = {
+const users = {};
 
-};
+users["hhhhhh"] = { user_id: "hhhhhh", email: "hello111111@com", password: "11111" };
+users["hhhhh1"] = { user_id: "hhhhh1", email: "hello111@com", password: "11111" };
+
 
 // POST route to edit the long URL
 app.post("/urls/:id", (req, res) => {
@@ -51,7 +53,7 @@ app.get("/urls", (req, res) => {
     user: users[req.cookies["user_id"]]
   };
 
-  console.log(templateVars);
+  //console.log(templateVars);
 
   res.render("urls_index", templateVars);
 });
@@ -118,7 +120,7 @@ app.get("/register", (req, res) => {
     user: users[req.cookies["user_id"]]
   };
 
-  console.log("==> " + templateVars.user);
+  //console.log("==> " + templateVars.user);
   // render register
   res.render("register", templateVars);
 });
@@ -130,13 +132,26 @@ app.post("/register", (req, res) => {
   //get email and password value
   const email = req.body.email;
   const password = req.body.password;
-  //update new long URL using id
+
+  // call function to check empty string input
+  if (checkEmptyString(email, password)) {
+    res.status(400).send("Email and password can not be empty");
+    return;
+  }
+
+  // call function to check existing user
+  if (checkExistingUser(email)) {
+    res.status(400).send("Email is already in the users");
+    return;
+  }
+
+  //add new user into users
   users[user_id] = { user_id, email, password };
 
+  //set up cookie with user id
   res.cookie('user_id', user_id);
 
   console.log(users);
-
   res.redirect("/urls");
 });
 
@@ -169,6 +184,26 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+// function to check empty email and password
+function checkEmptyString (email, password) {
+  if (email.length == 0 && password.length == 0) {
+    return true;
+  }
+  return false;
+}
+
+// function to check existing user
+function checkExistingUser (email) {
+
+  // check if user already exists or not
+  for (var user_id in users) {
+    if (users[user_id]['email'] === email) {
+      return users[user_id]
+    }
+  }
+  return null;
+}
 
 // function to generate shotURL
 function generateRandomString (length) {
