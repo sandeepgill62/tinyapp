@@ -20,7 +20,7 @@ const urlDatabase = {
 
 const users = {};
 
-users["hhhhhh"] = { user_id: "hhhhhh", email: "hello111111@com", password: "11111" };
+users["hhhhhh"] = { user_id: "hhhhhh", email: "hello@com", password: "11111" };
 users["hhhhh1"] = { user_id: "hhhhh1", email: "hello111@com", password: "11111" };
 
 
@@ -49,7 +49,6 @@ app.post("/urls/:id/delete", (req, res) => {
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
 
@@ -71,7 +70,6 @@ app.post("/urls", (req, res) => {
 // GET route for new URL
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
   res.render("urls_new", templateVars);
@@ -82,7 +80,6 @@ app.get("/urls/:id", (req, res) => {
   const templateVars = {
     id: req.params.id,
     longURL: urlDatabase[req.params.id],
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
   res.render("urls_show", templateVars);
@@ -98,7 +95,6 @@ app.get("/u/:id", (req, res) => {
 app.get("/login", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
 
@@ -107,26 +103,48 @@ app.get("/login", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  // get username value in req.body
-  const username = req.body.username;
-  // set up cookie
-  res.cookie('username', username);
+
+  // create user_id
+  const user_id = generateRandomString(6);
+  //get email and password value
+  const email = req.body.email;
+  const password = req.body.password;
+
+  // call function to check if email found
+  const userLogin = checkEmailFound(email);
+
+  if (userLogin) {
+    // call function to check if password found
+    if (!checkPasswordMatch(userLogin, password)) {
+      res.status(400).send("Password does not match");
+      return;
+    }
+  } else {
+    res.status(400).send("E-mail cannot be found");
+    return;
+  }
+
+  console.log("matching........")
+  //add new user into users
+  users[user_id] = { user_id, email, password };
+  //set up cookie with user id
+  res.cookie('user_id', user_id);
   // redirect to url_index page using /urls. -> remember use /urls
   res.redirect("/urls");
 });
 
 app.post("/logout", (req, res) => {
   // clear the cookie
-  res.clearCookie('username');
+  //res.clearCookie('username');
   res.clearCookie('user_id');
-  // redirect to url_index page using /urls. -> remember use /urls
-  res.redirect("/urls");
+
+  // redirect to login page
+  res.redirect("login");
 });
 
 app.get("/register", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
-    username: req.cookies["username"],
     user: users[req.cookies["user_id"]]
   };
 
@@ -150,7 +168,7 @@ app.post("/register", (req, res) => {
   }
 
   // call function to check existing user
-  if (checkExistingUser(email)) {
+  if (checkEmailFound(email)) {
     res.status(400).send("Email is already in the users");
     return;
   }
@@ -161,7 +179,7 @@ app.post("/register", (req, res) => {
   //set up cookie with user id
   res.cookie('user_id', user_id);
 
-  console.log(users);
+  //console.log(users);
   res.redirect("/urls");
 });
 
@@ -204,13 +222,23 @@ function checkEmptyString (email, password) {
 }
 
 // function to check existing user
-function checkExistingUser (email) {
+function checkEmailFound (email) {
 
   // check if user already exists or not
   for (var user_id in users) {
     if (users[user_id]['email'] === email) {
       return users[user_id]
     }
+  }
+  return null;
+}
+
+// function to check if password matches
+function checkPasswordMatch (user, password) {
+
+  console.log(user + "   " + user['password']);
+  if (user['password'] === password) {
+    return true;
   }
   return null;
 }
