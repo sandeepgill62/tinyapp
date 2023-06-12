@@ -124,7 +124,6 @@ app.post("/login", (req, res) => {
     return;
   }
 
-  console.log("matching........")
   //add new user into users
   users[user_id] = { user_id, email, password };
   //set up cookie with user id
@@ -148,7 +147,6 @@ app.get("/register", (req, res) => {
     user: users[req.cookies["user_id"]]
   };
 
-  //console.log("==> " + templateVars.user);
   // render register
   res.render("register", templateVars);
 });
@@ -183,32 +181,6 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
-// app.get("/hello", (req, res) => {
-//   const templateVars = { greeting: "Hello World!" };
-//   res.render("hello_world", templateVars);
-// });
-
-// app.get("/", (req, res) => {
-//   res.send("Hello!");
-// });
-
-// app.get("/urls.json", (req, res) => {
-//   res.json(urlDatabase);
-// });
-
-// app.get("/hello", (req, res) => {
-//   res.send("<html><body>Hello <b>World</b></body></html>\n");
-// });
-
-// app.get("/set", (req, res) => {
-//   const a = 1;
-//   res.send(`a = ${a}`);
-// });
-
-// app.get("/fetch", (req, res) => {
-//   res.send(`a = ${a}`);
-// });
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -236,7 +208,7 @@ function checkEmailFound (email) {
 // function to check if password matches
 function checkPasswordMatch (user, password) {
 
-  console.log(user + "   " + user['password']);
+  //check password 
   if (user['password'] === password) {
     return true;
   }
