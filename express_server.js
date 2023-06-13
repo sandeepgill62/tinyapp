@@ -20,10 +20,6 @@ const urlDatabase = {
 
 const users = {};
 
-users["hhhhhh"] = { user_id: "hhhhhh", email: "hello@com", password: "11111" };
-users["hhhhh1"] = { user_id: "hhhhh1", email: "hello111@com", password: "11111" };
-
-
 // POST route to edit the long URL
 app.post("/urls/:id", (req, res) => {
   //get id and newURL value into variable
