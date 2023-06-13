@@ -1,5 +1,8 @@
 const express = require("express");
 var cookieParser = require('cookie-parser')
+// hashing the password
+const bcrypt = require("bcryptjs");
+
 const app = express();
 const PORT = 8080; // default port 8080
 
@@ -104,7 +107,7 @@ app.post("/urls", (req, res) => {
   // create shortURL
   const shortURL = generateRandomString(6);
   // added new URl into database
-  urlDatabase[shortURL].longURL = req.body.longURL;
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies["user_id"] };
 
   //redirect to brower
   res.redirect(`urls/${shortURL}`);
@@ -175,7 +178,6 @@ app.get("/login", (req, res) => {
 
 // POST endpoint to login the user
 app.post("/login", (req, res) => {
-
   //get email and password value
   const email = req.body.email;
   const password = req.body.password;
@@ -184,8 +186,10 @@ app.post("/login", (req, res) => {
   const userLogin = checkEmailFound(email);
 
   if (userLogin) {
+    const hashedPassword = userLogin['password'];
+
     // call function to check if password found
-    if (!checkPasswordMatch(userLogin, password)) {
+    if (!checkPasswordMatch(password, hashedPassword)) {
       res.status(400).send("Password does not match");
       return;
     }
@@ -227,10 +231,10 @@ app.post("/register", (req, res) => {
   const user_id = generateRandomString(6);
   //get email and password value
   const email = req.body.email;
-  const password = req.body.password;
+  const _password = req.body.password;
 
   // call function to check empty string input
-  if (checkEmptyString(email, password)) {
+  if (checkEmptyString(email, _password)) {
     res.status(400).send("Email and password can not be empty");
     return;
   }
@@ -241,13 +245,14 @@ app.post("/register", (req, res) => {
     return;
   }
 
-  //add new user into users
+  // convert the password using hashing
+  const password = bcrypt.hashSync(_password, 10);
+
+  // add new user into users
   users[user_id] = { user_id, email, password };
-
-  //set up cookie with user id
+  // set up cookie with user id
   res.cookie('user_id', user_id);
-
-  //console.log(users);
+  // console.log(users);
   res.redirect("/urls");
 });
 
@@ -259,11 +264,9 @@ app.listen(PORT, () => {
 
 // function to filter user's urls
 function urlsForUser (id) {
-  console.log(urlDatabase[id]);
   const newDatabase = {}
   for (var url_id in urlDatabase) {
     if (urlDatabase[url_id].userID === id) {
-      console.log(urlDatabase[url_id]);
       newDatabase[url_id] = urlDatabase[url_id];
     }
   }
@@ -290,9 +293,9 @@ function checkEmailFound (email) {
 }
 
 // function to check if password matches
-function checkPasswordMatch (user, password) {
+function checkPasswordMatch (password, hashedPassword) {
   //check password 
-  if (user['password'] === password) {
+  if (bcrypt.compareSync(password, hashedPassword)) {
     return true;
   }
   return null;
