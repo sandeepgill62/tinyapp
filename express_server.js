@@ -20,7 +20,9 @@ const urlDatabase = {
 
 const users = {};
 
-// POST route to edit the long URL
+//users["hhhhhh"] = { user_id: "hhhhhh", email: "hello@com", password: "11111" };
+
+// POST endpoint to edit the long URL
 app.post("/urls/:id", (req, res) => {
   //get id and newURL value into variable
   const id = req.params.id;
@@ -32,7 +34,7 @@ app.post("/urls/:id", (req, res) => {
   res.redirect("/urls");
 });
 
-// POST route to delete the URL
+// POST endpoint to delete the URL
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
   // delete url from database
@@ -41,18 +43,24 @@ app.post("/urls/:id/delete", (req, res) => {
   res.redirect("/urls");
 });
 
-// GET route to show form
+// GET endpoint to show form
 app.get("/urls", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
     user: users[req.cookies["user_id"]]
   };
 
-  //console.log(templateVars);
+  // redirect login if user is not logged in
+  if (!templateVars['user']) {
+    // redirect login
+    res.redirect("login");
+    return;
+  }
+
   res.render("urls_index", templateVars);
 });
 
-// POST route to add new URL 
+// POST endpoint to add new URL 
 app.post("/urls", (req, res) => {
   // create shortURL
   const shortURL = generateRandomString(6);
@@ -63,11 +71,19 @@ app.post("/urls", (req, res) => {
   res.redirect(`urls/${shortURL}`);
 });
 
-// GET route for new URL
+// GET endpoint for new URL
 app.get("/urls/new", (req, res) => {
   const templateVars = {
     user: users[req.cookies["user_id"]]
   };
+
+  // redirect login if user is not logged in
+  if (!templateVars['user']) {
+    // redirect login
+    res.render("login", templateVars);
+    return;
+  }
+
   res.render("urls_new", templateVars);
 });
 
@@ -78,16 +94,24 @@ app.get("/urls/:id", (req, res) => {
     longURL: urlDatabase[req.params.id],
     user: users[req.cookies["user_id"]]
   };
+
+  console.log(templateVars['longURL']);
+  if (!templateVars['longURL']) {
+    res.status(400).send("ID is not in the database");
+    return;
+  }
+
   res.render("urls_show", templateVars);
 });
 
-// GET route for shorter version to redirect to actual long URL
+// GET endpoint for shorter version to redirect to actual long URL
 app.get("/u/:id", (req, res) => {
   const longURL = urlDatabase[req.params.id];
   // redirect to actual website url
   res.redirect(longURL);
 });
 
+// GET endpoint to use login link
 app.get("/login", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -98,6 +122,7 @@ app.get("/login", (req, res) => {
   res.render("login", templateVars);
 });
 
+// POST endpoint to login the user
 app.post("/login", (req, res) => {
 
   // create user_id
@@ -128,15 +153,16 @@ app.post("/login", (req, res) => {
   res.redirect("/urls");
 });
 
+// POST endpoint to logout the user
 app.post("/logout", (req, res) => {
   // clear the cookie
-  //res.clearCookie('username');
   res.clearCookie('user_id');
 
   // redirect to login page
   res.redirect("login");
 });
 
+// GET endpoint to use register link
 app.get("/register", (req, res) => {
   const templateVars = {
     urls: urlDatabase,
@@ -147,6 +173,7 @@ app.get("/register", (req, res) => {
   res.render("register", templateVars);
 });
 
+// POST endpoint to register the user
 app.post("/register", (req, res) => {
 
   // create user_id
@@ -177,6 +204,7 @@ app.post("/register", (req, res) => {
   res.redirect("/urls");
 });
 
+// listen the port
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
@@ -191,7 +219,6 @@ function checkEmptyString (email, password) {
 
 // function to check existing user
 function checkEmailFound (email) {
-
   // check if user already exists or not
   for (var user_id in users) {
     if (users[user_id]['email'] === email) {
@@ -203,7 +230,6 @@ function checkEmailFound (email) {
 
 // function to check if password matches
 function checkPasswordMatch (user, password) {
-
   //check password 
   if (user['password'] === password) {
     return true;
