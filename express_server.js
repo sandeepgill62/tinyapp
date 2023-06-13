@@ -13,14 +13,30 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // database to store URLs key-value
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: "hhhhhh",
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: "tttttt",
+  },
+  "9sm512": {
+    longURL: "http://www.g.com",
+    userID: "hhhhhh",
+  }
 };
 
 const users = {};
 
-//users["hhhhhh"] = { user_id: "hhhhhh", email: "hello@com", password: "11111" };
+users["hhhhhh"] = { user_id: "hhhhhh", email: "hello@com", password: "11" };
+users["tttttt"] = { user_id: "tttttt", email: "ttttt@com", password: "11" };
 
 // POST endpoint to edit the long URL
 app.post("/urls/:id", (req, res) => {
@@ -28,7 +44,8 @@ app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const newURL = req.body.longURL;
   //update new long URL using id
-  urlDatabase[id] = newURL;
+  //
+  urlDatabase[id].longURL = newURL;
 
   // redirect to url_index page. -> remember use /urls
   res.redirect("/urls");
@@ -37,6 +54,23 @@ app.post("/urls/:id", (req, res) => {
 // POST endpoint to delete the URL
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
+  const user_id = req.cookies["user_id"];
+
+  if (!user_id) {
+    res.status(400).send("User is not logged in");
+    return;
+  }
+
+  if (!urlDatabase[id]) {
+    res.status(400).send("ID is not in the database");
+    return;
+  }
+
+  if (urlDatabase[id].userID !== user_id) {
+    res.status(400).send("This URL does not belong to this user");
+    return;
+  }
+
   // delete url from database
   delete urlDatabase[id];
   // redirect to url_index page using /urls. -> remember use /
@@ -45,10 +79,15 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // GET endpoint to show form
 app.get("/urls", (req, res) => {
+
+  const user_id = req.cookies["user_id"];
   const templateVars = {
-    urls: urlDatabase,
-    user: users[req.cookies["user_id"]]
+    //call function to get user's urls only
+    urls: urlsForUser(user_id),
+    user: users[user_id]
   };
+
+  urlsForUser(user_id);
 
   // redirect login if user is not logged in
   if (!templateVars['user']) {
@@ -65,7 +104,7 @@ app.post("/urls", (req, res) => {
   // create shortURL
   const shortURL = generateRandomString(6);
   // added new URl into database
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL].longURL = req.body.longURL;
 
   //redirect to brower
   res.redirect(`urls/${shortURL}`);
@@ -83,30 +122,42 @@ app.get("/urls/new", (req, res) => {
     res.render("login", templateVars);
     return;
   }
-
   res.render("urls_new", templateVars);
 });
 
 // Route Parameters
 app.get("/urls/:id", (req, res) => {
+
+  const user_id = req.cookies["user_id"];
   const templateVars = {
     id: req.params.id,
-    longURL: urlDatabase[req.params.id],
-    user: users[req.cookies["user_id"]]
+    user: users[user_id]
   };
 
-  console.log(templateVars['longURL']);
-  if (!templateVars['longURL']) {
+  if (!templateVars['user']) {
+    res.status(400).send("User is not logged in");
+    return;
+  }
+
+  if (!urlDatabase[req.params.id]) {
     res.status(400).send("ID is not in the database");
     return;
   }
+
+  if (urlDatabase[req.params.id].userID !== user_id) {
+    res.status(400).send("This URL does not belong to this user");
+    return;
+  }
+
+  templateVars['longURL'] = urlDatabase[req.params.id].longURL;
 
   res.render("urls_show", templateVars);
 });
 
 // GET endpoint for shorter version to redirect to actual long URL
 app.get("/u/:id", (req, res) => {
-  const longURL = urlDatabase[req.params.id];
+  //
+  const longURL = urlDatabase[req.params.id].longURL;
   // redirect to actual website url
   res.redirect(longURL);
 });
@@ -125,8 +176,6 @@ app.get("/login", (req, res) => {
 // POST endpoint to login the user
 app.post("/login", (req, res) => {
 
-  // create user_id
-  const user_id = generateRandomString(6);
   //get email and password value
   const email = req.body.email;
   const password = req.body.password;
@@ -145,10 +194,8 @@ app.post("/login", (req, res) => {
     return;
   }
 
-  //add new user into users
-  users[user_id] = { user_id, email, password };
   //set up cookie with user id
-  res.cookie('user_id', user_id);
+  res.cookie('user_id', userLogin['user_id']);
   // redirect to url_index page using /urls. -> remember use /urls
   res.redirect("/urls");
 });
@@ -208,6 +255,20 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
+// function to filter user's urls
+function urlsForUser (id) {
+  console.log(urlDatabase[id]);
+  const newDatabase = {}
+  for (var url_id in urlDatabase) {
+    if (urlDatabase[url_id].userID === id) {
+      console.log(urlDatabase[url_id]);
+      newDatabase[url_id] = urlDatabase[url_id];
+    }
+  }
+  return newDatabase;
+}
 
 // function to check empty email and password
 function checkEmptyString (email, password) {
