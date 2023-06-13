@@ -1,5 +1,5 @@
 const express = require("express");
-var cookieParser = require('cookie-parser')
+var cookieSession = require('cookie-session')
 // hashing the password
 const bcrypt = require("bcryptjs");
 
@@ -12,8 +12,13 @@ app.set("view engine", "ejs");
 // to translate and parse the data
 app.use(express.urlencoded({ extended: true }));
 
-// to use cookieParser
-app.use(cookieParser());
+// to use cookieSession
+app.use(cookieSession({
+  name: 'session',
+  keys: ['lighthouse', 'lab', 'to', 'learn', 'web', 'development'],
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
 
 // database to store URLs key-value
 // const urlDatabase = {
@@ -47,7 +52,6 @@ app.post("/urls/:id", (req, res) => {
   const id = req.params.id;
   const newURL = req.body.longURL;
   //update new long URL using id
-  //
   urlDatabase[id].longURL = newURL;
 
   // redirect to url_index page. -> remember use /urls
@@ -57,14 +61,14 @@ app.post("/urls/:id", (req, res) => {
 // POST endpoint to delete the URL
 app.post("/urls/:id/delete", (req, res) => {
   const id = req.params.id;
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
 
   if (!user_id) {
     res.status(400).send("User is not logged in");
     return;
   }
 
-  if (!urlDatabase[id]) {
+  if (!urlsForUser(user_id)[id]) {
     res.status(400).send("ID is not in the database");
     return;
   }
@@ -83,7 +87,7 @@ app.post("/urls/:id/delete", (req, res) => {
 // GET endpoint to show form
 app.get("/urls", (req, res) => {
 
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   const templateVars = {
     //call function to get user's urls only
     urls: urlsForUser(user_id),
@@ -104,10 +108,11 @@ app.get("/urls", (req, res) => {
 
 // POST endpoint to add new URL 
 app.post("/urls", (req, res) => {
+  const user_id = req.session.user_id;
   // create shortURL
   const shortURL = generateRandomString(6);
   // added new URl into database
-  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: req.cookies["user_id"] };
+  urlDatabase[shortURL] = { longURL: req.body.longURL, userID: user_id };
 
   //redirect to brower
   res.redirect(`urls/${shortURL}`);
@@ -115,8 +120,9 @@ app.post("/urls", (req, res) => {
 
 // GET endpoint for new URL
 app.get("/urls/new", (req, res) => {
+  const user_id = req.session.user_id;
   const templateVars = {
-    user: users[req.cookies["user_id"]]
+    user: users[user_id]
   };
 
   // redirect login if user is not logged in
@@ -131,9 +137,10 @@ app.get("/urls/new", (req, res) => {
 // Route Parameters
 app.get("/urls/:id", (req, res) => {
 
-  const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   const templateVars = {
     id: req.params.id,
+    urls: urlsForUser(user_id),
     user: users[user_id]
   };
 
@@ -142,7 +149,7 @@ app.get("/urls/:id", (req, res) => {
     return;
   }
 
-  if (!urlDatabase[req.params.id]) {
+  if (!urlsForUser(user_id)[req.params.id]) {
     res.status(400).send("ID is not in the database");
     return;
   }
@@ -159,7 +166,6 @@ app.get("/urls/:id", (req, res) => {
 
 // GET endpoint for shorter version to redirect to actual long URL
 app.get("/u/:id", (req, res) => {
-  //
   const longURL = urlDatabase[req.params.id].longURL;
   // redirect to actual website url
   res.redirect(longURL);
@@ -167,9 +173,10 @@ app.get("/u/:id", (req, res) => {
 
 // GET endpoint to use login link
 app.get("/login", (req, res) => {
+  const user_id = req.session.user_id;
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]]
+    user: users[user_id]
   };
 
   // render login
@@ -199,7 +206,8 @@ app.post("/login", (req, res) => {
   }
 
   //set up cookie with user id
-  res.cookie('user_id', userLogin['user_id']);
+  const user_id = userLogin['user_id'];
+  req.session.user_id = user_id;
   // redirect to url_index page using /urls. -> remember use /urls
   res.redirect("/urls");
 });
@@ -207,7 +215,7 @@ app.post("/login", (req, res) => {
 // POST endpoint to logout the user
 app.post("/logout", (req, res) => {
   // clear the cookie
-  res.clearCookie('user_id');
+  req.session = null;
 
   // redirect to login page
   res.redirect("login");
@@ -215,9 +223,10 @@ app.post("/logout", (req, res) => {
 
 // GET endpoint to use register link
 app.get("/register", (req, res) => {
+  const user_id = req.session.user_id;
   const templateVars = {
     urls: urlDatabase,
-    user: users[req.cookies["user_id"]]
+    user: users[user_id]
   };
 
   // render register
@@ -251,7 +260,7 @@ app.post("/register", (req, res) => {
   // add new user into users
   users[user_id] = { user_id, email, password };
   // set up cookie with user id
-  res.cookie('user_id', user_id);
+  req.session.user_id = user_id;
   // console.log(users);
   res.redirect("/urls");
 });
@@ -305,7 +314,7 @@ function checkPasswordMatch (password, hashedPassword) {
 function generateRandomString (length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  let result = ' ';
+  let result = '';
   const charactersLength = characters.length;
   for (let i = 0; i < length; i++) {
     result += characters.charAt(Math.floor(Math.random() * charactersLength));
