@@ -1,6 +1,7 @@
 const { assert } = require('chai');
+const bcrypt = require("bcryptjs");
 
-const getUserByEmail = require('../helpers.js');
+const { getUserByEmail, urlsForUser, checkEmptyString, checkPasswordMatch } = require('../helpers.js');
 
 const testUsers = {
   "userRandomID": {
@@ -15,6 +16,17 @@ const testUsers = {
   }
 };
 
+const urlDatabase = {
+  'shortURL1': {
+    longURL: "longURL1",
+    userID: "userRandomID1",
+  },
+  'shortURL2': {
+    longURL: "longURL2",
+    userID: "userRandomID2",
+  },
+};
+
 describe('getUserByEmail', function () {
   it('should return a user with valid email', function () {
     const user = getUserByEmail("user@example.com", testUsers);
@@ -27,5 +39,50 @@ describe('getUserByEmail', function () {
     const expectedUserID = null;
     assert.deepEqual(user, expectedUserID);
   });
+});
 
+describe('urlsForUser', function () {
+  it('should return a urls for user', function () {
+    const newDatabase = urlsForUser("userRandomID1", urlDatabase);
+    const expectedNewDatabase = { shortURL1: { longURL: 'longURL1', userID: 'userRandomID1' } };
+    assert.deepEqual(newDatabase, expectedNewDatabase);
+  });
+});
+
+describe('checkEmptyString', function () {
+
+  it('should return true if only email is empty', function () {
+    const result = checkEmptyString("", "12345");
+    const expectedResult = true;
+    assert.deepEqual(result, expectedResult);
+  });
+
+  it('should return true if only password is empty', function () {
+    const result = checkEmptyString("user@gmail.com", "");
+    const expectedResult = true;
+    assert.deepEqual(result, expectedResult);
+  });
+
+  it('should return true if both email and password are empty', function () {
+    const result = checkEmptyString("", "");
+    const expectedResult = true;
+    assert.deepEqual(result, expectedResult);
+  });
+
+  it('should return false if email or password is not empty', function () {
+    const result = checkEmptyString("user@gmail.com", "12345");
+    const expectedResult = false;
+    assert.deepEqual(result, expectedResult);
+  });
+});
+
+
+describe('checkPasswordMatch', function () {
+
+  it('should return true if password matches', function () {
+    const hashedPassword = bcrypt.hashSync("12345", 10);
+    const result = checkPasswordMatch("12345", hashedPassword);
+    const expectedResult = true;
+    assert.deepEqual(result, expectedResult);
+  });
 });

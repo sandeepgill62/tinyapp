@@ -1,6 +1,7 @@
 const express = require("express");
-var cookieSession = require('cookie-session')
-const getUserByEmail = require("./helpers")
+var cookieSession = require('cookie-session');
+//const { getUserByEmail } = require("./helpers");
+const { getUserByEmail, urlsForUser, checkEmptyString, checkPasswordMatch, generateRandomString } = require("./helpers")
 
 // hashing the password
 const bcrypt = require("bcryptjs");
@@ -23,11 +24,11 @@ app.use(cookieSession({
 }));
 
 const urlDatabase = {
-  b6UTxQ: {
+  'b6UTxQ': {
     longURL: "https://www.tsn.ca",
     userID: "aJ48lW",
   },
-  i3BoGr: {
+  'i3BoGr': {
     longURL: "https://www.google.ca",
     userID: "aJ48lW",
   },
@@ -57,7 +58,7 @@ app.post("/urls/:id/delete", (req, res) => {
     return;
   }
 
-  if (!urlsForUser(user_id)[id]) {
+  if (!urlsForUser(user_id, urlDatabase)[id]) {
     res.status(400).send("ID is not in the database");
     return;
   }
@@ -79,11 +80,9 @@ app.get("/urls", (req, res) => {
   const user_id = req.session.user_id;
   const templateVars = {
     //call function to get user's urls only
-    urls: urlsForUser(user_id),
+    urls: urlsForUser(user_id, urlDatabase),
     user: users[user_id]
   };
-
-  urlsForUser(user_id);
 
   // redirect login if user is not logged in
   if (!templateVars['user']) {
@@ -138,7 +137,7 @@ app.get("/urls/:id", (req, res) => {
     return;
   }
 
-  if (!urlsForUser(user_id)[req.params.id]) {
+  if (!urlsForUser(user_id, urlDatabase)[req.params.id]) {
     res.status(400).send("ID is not in the database");
     return;
   }
@@ -177,6 +176,12 @@ app.post("/login", (req, res) => {
   //get email and password value
   const email = req.body.email;
   const password = req.body.password;
+
+  // call function to check empty string input
+  if (checkEmptyString(email, password)) {
+    res.status(400).send("Email and password can not be empty");
+    return;
+  }
 
   // call function to check if email found
   const userLogin = getUserByEmail(email, users);
@@ -250,7 +255,10 @@ app.post("/register", (req, res) => {
   users[user_id] = { user_id, email, password };
   // set up cookie with user id
   req.session.user_id = user_id;
-  // console.log(users);
+  res.redirect("/urls");
+});
+
+app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
@@ -258,46 +266,3 @@ app.post("/register", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-
-// function to filter user's urls
-function urlsForUser (id) {
-  const newDatabase = {}
-  for (var url_id in urlDatabase) {
-    if (urlDatabase[url_id].userID === id) {
-      newDatabase[url_id] = urlDatabase[url_id];
-    }
-  }
-  return newDatabase;
-}
-
-// function to check empty email and password
-function checkEmptyString (email, password) {
-  if (email.length == 0 && password.length == 0) {
-    return true;
-  }
-  return false;
-}
-
-// function to check if password matches
-function checkPasswordMatch (password, hashedPassword) {
-  //check password 
-  if (bcrypt.compareSync(password, hashedPassword)) {
-    return true;
-  }
-  return null;
-}
-
-// function to generate shotURL
-function generateRandomString (length) {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-  let result = '';
-  const charactersLength = characters.length;
-  for (let i = 0; i < length; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
-  }
-
-  return result;
-}
-
