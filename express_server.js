@@ -1,5 +1,7 @@
 const express = require("express");
 var cookieSession = require('cookie-session')
+const getUserByEmail = require("./helpers")
+
 // hashing the password
 const bcrypt = require("bcryptjs");
 
@@ -20,31 +22,18 @@ app.use(cookieSession({
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 
-// database to store URLs key-value
-// const urlDatabase = {
-//   "b2xVn2": "http://www.lighthouselabs.ca",
-//   "9sm5xK": "http://www.google.com"
-// };
-
 const urlDatabase = {
-  "b2xVn2": {
-    longURL: "http://www.lighthouselabs.ca",
-    userID: "hhhhhh",
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW",
   },
-  "9sm5xK": {
-    longURL: "http://www.google.com",
-    userID: "tttttt",
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW",
   },
-  "9sm512": {
-    longURL: "http://www.g.com",
-    userID: "hhhhhh",
-  }
 };
 
 const users = {};
-
-users["hhhhhh"] = { user_id: "hhhhhh", email: "hello@com", password: "11" };
-users["tttttt"] = { user_id: "tttttt", email: "ttttt@com", password: "11" };
 
 // POST endpoint to edit the long URL
 app.post("/urls/:id", (req, res) => {
@@ -190,7 +179,7 @@ app.post("/login", (req, res) => {
   const password = req.body.password;
 
   // call function to check if email found
-  const userLogin = checkEmailFound(email);
+  const userLogin = getUserByEmail(email, users);
 
   if (userLogin) {
     const hashedPassword = userLogin['password'];
@@ -205,8 +194,8 @@ app.post("/login", (req, res) => {
     return;
   }
 
-  //set up cookie with user id
   const user_id = userLogin['user_id'];
+  // set up cookie with user id
   req.session.user_id = user_id;
   // redirect to url_index page using /urls. -> remember use /urls
   res.redirect("/urls");
@@ -249,7 +238,7 @@ app.post("/register", (req, res) => {
   }
 
   // call function to check existing user
-  if (checkEmailFound(email)) {
+  if (getUserByEmail(email, users)) {
     res.status(400).send("Email is already in the users");
     return;
   }
@@ -290,17 +279,6 @@ function checkEmptyString (email, password) {
   return false;
 }
 
-// function to check existing user
-function checkEmailFound (email) {
-  // check if user already exists or not
-  for (var user_id in users) {
-    if (users[user_id]['email'] === email) {
-      return users[user_id]
-    }
-  }
-  return null;
-}
-
 // function to check if password matches
 function checkPasswordMatch (password, hashedPassword) {
   //check password 
@@ -322,3 +300,4 @@ function generateRandomString (length) {
 
   return result;
 }
+
