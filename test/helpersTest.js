@@ -76,7 +76,6 @@ describe('checkEmptyString', function () {
   });
 });
 
-
 describe('checkPasswordMatch', function () {
 
   it('should return true if password matches', function () {

@@ -1,13 +1,13 @@
 const express = require("express");
 var cookieSession = require('cookie-session');
-//const { getUserByEmail } = require("./helpers");
 const { getUserByEmail, urlsForUser, checkEmptyString, checkPasswordMatch, generateRandomString } = require("./helpers")
 
 // hashing the password
 const bcrypt = require("bcryptjs");
 
 const app = express();
-const PORT = 8080; // default port 8080
+// default port 8080
+const PORT = 8080;
 
 // set up for ejs template
 app.set("view engine", "ejs");
@@ -124,7 +124,6 @@ app.get("/urls/new", (req, res) => {
 
 // Route Parameters
 app.get("/urls/:id", (req, res) => {
-
   const user_id = req.session.user_id;
   const templateVars = {
     id: req.params.id,
@@ -148,7 +147,6 @@ app.get("/urls/:id", (req, res) => {
   }
 
   templateVars['longURL'] = urlDatabase[req.params.id].longURL;
-
   res.render("urls_show", templateVars);
 });
 
@@ -250,7 +248,6 @@ app.post("/register", (req, res) => {
 
   // convert the password using hashing
   const password = bcrypt.hashSync(_password, 10);
-
   // add new user into users
   users[user_id] = { user_id, email, password };
   // set up cookie with user id
